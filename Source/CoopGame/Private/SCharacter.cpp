@@ -23,6 +23,12 @@ ASCharacter::ASCharacter()
 	GetMovementComponent()->GetNavAgentPropertiesRef().bCanCrouch = true;
 }
 
+FVector ASCharacter::GetPawnViewLocation() const {
+	if (!CameraComp) { return Super::GetPawnViewLocation(); }
+
+	return CameraComp->GetComponentLocation();
+}
+
 // Called when the game starts or when spawned
 void ASCharacter::BeginPlay()
 {

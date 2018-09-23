@@ -6,6 +6,9 @@
 #include "Kismet/GameplayStatics.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "PhysicalMaterials/PhysicalMaterial.h"
+#include "CoopGame.h"
+#include "TimerManager.h"
 
 static int32 DebugWeaponDrawing = 0;
 FAutoConsoleVariableRef CVARDebugWeaponDrawing(
@@ -23,6 +26,8 @@ ASWeapon::ASWeapon()
 
 	MuzzleSocketName = "MuzzleSocket";
 	TracerTargetName = "Target";
+	BaseDamage = 20.f;
+	RateOfFire = 600.f;
 }
 
 void ASWeapon::Fire() {
@@ -42,18 +47,27 @@ void ASWeapon::Fire() {
 		QueryParams.AddIgnoredActor(WeaponOwner);
 		QueryParams.AddIgnoredActor(this);
 		QueryParams.bTraceComplex = true;
+		QueryParams.bReturnPhysicalMaterial = true;
 
 		// Tracer particle "Target" param
 		FVector TracerEndPoint = TraceEnd;
 
-		if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, ECC_Visibility, QueryParams)) {
+		if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, COLLISION_WEAPON, QueryParams)) {
 			auto HitActor = Hit.GetActor();
 
 			TracerEndPoint = Hit.ImpactPoint;
 
+			auto SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
+
+			float ActualDamage = BaseDamage;
+
+			if (SurfaceType == SURFACE_FLESHVULNERABLE) {
+				ActualDamage *= 4.f;
+			}
+
 			UGameplayStatics::ApplyPointDamage(
 				HitActor,
-				20.f,
+				ActualDamage,
 				ShotDirection,
 				Hit,
 				WeaponOwner->GetInstigatorController(),
@@ -61,10 +75,23 @@ void ASWeapon::Fire() {
 				DamageType
 			);
 
-			if (ImpactEffect) {
+			
+			UParticleSystem* SelectedEffect = nullptr;
+
+			switch(SurfaceType) {
+			case SURFACE_FLESHDEFAULT:
+			case SURFACE_FLESHVULNERABLE:
+				SelectedEffect = FleshImpactEffect;
+				break;
+			default:
+				SelectedEffect = DefaultImpactEffect;
+				break;
+			}
+
+			if (SelectedEffect) {
 				UGameplayStatics::SpawnEmitterAtLocation(
 					GetWorld(),
-					ImpactEffect,
+					SelectedEffect,
 					Hit.ImpactPoint,
 					Hit.ImpactNormal.Rotation()
 				);
@@ -77,7 +104,25 @@ void ASWeapon::Fire() {
 		
 
 		PlayFireEffects(TracerEndPoint);
+		LastFiredTime = GetWorld()->TimeSeconds;
 	}
+}
+
+void ASWeapon::StartFire() {
+	float FirstDelay = LastFiredTime + TimeBetweenShots - GetWorld()->TimeSeconds;
+	float ClampedDelay = FMath::Max(FirstDelay, 0.f);
+
+	GetWorldTimerManager().SetTimer(TimerHandle_TimeBetweenShots, this, &ASWeapon::Fire, TimeBetweenShots, true, ClampedDelay);
+}
+
+void ASWeapon::StopFire() {
+	GetWorldTimerManager().ClearTimer(TimerHandle_TimeBetweenShots);
+}
+
+void ASWeapon::BeginPlay() {
+	Super::BeginPlay();
+
+	TimeBetweenShots = 60 / RateOfFire;
 }
 
 void ASWeapon::PlayFireEffects(FVector TracerEndPoint) {

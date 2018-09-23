@@ -18,14 +18,14 @@ public:
 	// Sets default values for this actor's properties
 	ASWeapon();
 
-protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	USkeletalMeshComponent* MeshComp;
-	
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	virtual void Fire();
 
-	void PlayFireEffects();
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	USkeletalMeshComponent* MeshComp;
+
+	void PlayFireEffects(FVector TracerEndPoint);
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	

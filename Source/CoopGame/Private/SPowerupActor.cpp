@@ -1,18 +1,20 @@
 #include "SPowerupActor.h"
 #include "TimerManager.h"
-
+#include "UnrealNetwork.h"
 
 ASPowerupActor::ASPowerupActor() {
 	PowerupInterval = 0.f;
 	TotalNrOfTicks = 0;
+	bIsPowerupActive = false;
+
+	SetReplicates(true);
 }
 
-void ASPowerupActor::BeginPlay() {
-	Super::BeginPlay();
-}
+void ASPowerupActor::ActivatePowerup(AActor* ActivateFor) {
+	OnActivated(ActivateFor);
 
-void ASPowerupActor::ActivatePowerup() {
-	OnActivated();
+	bIsPowerupActive = true;
+	OnRep_PowerupActive();
 
 	if (PowerupInterval > 0.f) {
 		GetWorldTimerManager().SetTimer(TimerHandle_PowerupTick, this, &ASPowerupActor::OnTickPowerup, PowerupInterval, true);
@@ -28,7 +30,20 @@ void ASPowerupActor::OnTickPowerup() {
 	
 	if (TicksProcessed >= TotalNrOfTicks) {
 		OnExpired();
+
+		bIsPowerupActive = false;
+		OnRep_PowerupActive();
+
 		GetWorldTimerManager().ClearTimer(TimerHandle_PowerupTick);
 	}
 }
 
+void ASPowerupActor::OnRep_PowerupActive() {
+	OnPowerupStateChange(bIsPowerupActive);
+}
+
+void ASPowerupActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const {
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ASPowerupActor, bIsPowerupActive);
+}

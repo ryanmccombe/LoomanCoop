@@ -12,10 +12,10 @@ class COOPGAME_API ASPowerupActor : public AActor
 public:	
 	ASPowerupActor();
 
-	void ActivatePowerup();
+	void ActivatePowerup(AActor* ActivateFor);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Powerups")
-	void OnActivated();
+	void OnActivated(AActor* ActivateFor);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Powerups")
 	void OnExpired();
@@ -23,9 +23,10 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Powerups")
 	void OnPowerupTicked();
 
-protected:
-	virtual void BeginPlay() override;
+	UFUNCTION(BlueprintImplementableEvent, Category = "Powerups")
+	void OnPowerupStateChange(bool bNewIsActive);
 
+protected:
 	/* Time between powerup ticks */
 	UPROPERTY(EditDefaultsOnly, Category = "Powerups")
 	float PowerupInterval;
@@ -41,4 +42,12 @@ protected:
 
 	UFUNCTION()
 	void OnTickPowerup();
+
+	UPROPERTY(ReplicatedUsing=OnRep_PowerupActive)
+	bool bIsPowerupActive;
+
+	UFUNCTION()
+	void OnRep_PowerupActive();
+
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
 };

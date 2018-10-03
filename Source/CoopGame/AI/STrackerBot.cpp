@@ -77,7 +77,7 @@ FVector ASTrackerBot::GetNextPathPoint() {
 
 	auto NavPath = UNavigationSystemV1::FindPathToActorSynchronously(this, GetActorLocation(), PlayerPawn);
 
-	if (NavPath->PathPoints.Num() > 1) {
+	if (NavPath && NavPath->PathPoints.Num() > 1) {
 		return NavPath->PathPoints[1];
 	}
 
@@ -93,6 +93,7 @@ void ASTrackerBot::SelfDestruct() {
 	UGameplayStatics::PlaySoundAtLocation(this, ExplodeSound, GetActorLocation());
 
 	MeshComp->SetVisibility(false, true);
+	MeshComp->SetSimulatePhysics(false);
 	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	if (Role == ROLE_Authority) {
@@ -184,6 +185,8 @@ void ASTrackerBot::OnCheckNearbyBots() {
 	const int32 MaxPowerLevel = 4;
 
 	PowerLevel = FMath::Clamp(NrOfBots, 0, MaxPowerLevel);
+	UE_LOG(LogTemp, Warning, TEXT("Power Level: %i, Overlaps: %i, NrBots: %i"), PowerLevel, Overlaps.Num(), NrOfBots)
+	
 
 	if (MatInst == nullptr) {
 		MatInst = MeshComp->CreateAndSetMaterialInstanceDynamicFromMaterial(0, MeshComp->GetMaterial(0));

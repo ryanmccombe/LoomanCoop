@@ -29,6 +29,8 @@ void USHealthComponent::BeginPlay()
 	Health = DefaultHealth;
 }
 
+float USHealthComponent::GetHealth() const { return Health; }
+
 void USHealthComponent::OnRep_Health(float OldHealth) {
 	float Damage = Health - OldHealth;
 	OnHealthChanged.Broadcast(this, Health, Damage, nullptr, nullptr, nullptr);

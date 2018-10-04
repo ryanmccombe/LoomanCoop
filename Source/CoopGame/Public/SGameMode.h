@@ -13,6 +13,7 @@ public:
 	ASGameMode();
 
 	virtual void StartPlay() override;
+	virtual void Tick(float DeltaSeconds) override;
 
 protected:
 	// Hook for BP to spawn a single bot
@@ -27,7 +28,10 @@ protected:
 
 	void PrepareForNextWave();
 
+	void CheckWaveState();
+
 	FTimerHandle TimerHandle_BotSpawner;
+	FTimerHandle TimerHandle_NextWaveStart;
 
 	// Bots to spawn in current wave
 	int32 NrOfBotsToSpawn;
@@ -36,4 +40,7 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "GameMode")
 	float TimeBetweenWaves;
+
+	void CheckAnyPlayerAlive();
+	void GameOver();
 };

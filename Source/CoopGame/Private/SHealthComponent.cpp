@@ -2,6 +2,8 @@
 
 #include "SHealthComponent.h"
 #include "UnrealNetwork.h"
+#include "Engine/World.h"
+#include "SGameMode.h"
 
 
 // Sets default values for this component's properties
@@ -10,6 +12,7 @@ USHealthComponent::USHealthComponent()
 	DefaultHealth = 100.f;
 
 	SetIsReplicated(true);
+	bIsDead = false;
 }
 
 
@@ -38,10 +41,19 @@ void USHealthComponent::OnRep_Health(float OldHealth) {
 
 void USHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType,
 	AController* InstigatedBy, AActor* DamageCauser) {
-	if (Damage <= 0.f) return;
+	if (Damage <= 0.f || bIsDead) return;
 
 	Health = FMath::Clamp(Health - Damage, 0.f, DefaultHealth);
+	bIsDead = Health <= 0.f;
+
 	OnHealthChanged.Broadcast(this, Health, Damage, DamageType, InstigatedBy, DamageCauser);
+
+	if (bIsDead) {
+		auto GM = Cast<ASGameMode>(GetWorld()->GetAuthGameMode());
+		if (GM) {
+			GM->OnActorKilled.Broadcast(GetOwner(), DamageCauser, InstigatedBy);
+		}
+	}
 }
 
 void USHealthComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const {

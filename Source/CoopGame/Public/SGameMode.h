@@ -4,6 +4,10 @@
 #include "GameFramework/GameModeBase.h"
 #include "SGameMode.generated.h"
 
+enum class EWaveState : uint8;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnActorKilled, AActor*, VictimActor, AActor*, KillerActor, AController*, KillerController);
+
 UCLASS()
 class COOPGAME_API ASGameMode : public AGameModeBase
 {
@@ -14,6 +18,9 @@ public:
 
 	virtual void StartPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
+
+	UPROPERTY(BlueprintAssignable, Category = "GameMode")
+	FOnActorKilled OnActorKilled;
 
 protected:
 	// Hook for BP to spawn a single bot
@@ -43,4 +50,6 @@ protected:
 
 	void CheckAnyPlayerAlive();
 	void GameOver();
+
+	void SetWaveState(EWaveState NewState);
 };

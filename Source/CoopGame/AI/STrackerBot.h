@@ -71,6 +71,7 @@ protected:
 	bool bStartedSelfDestruction;
 
 	FTimerHandle TimerHandle_SelfDamage;
+	FTimerHandle  TimerHandle_RefreshPath;
 
 	void DamageSelf();
 
@@ -83,6 +84,8 @@ protected:
 	int32 PowerLevel;
 
 	void OnCheckNearbyBots();
+
+	void RefreshPath();
 
 
 public:	

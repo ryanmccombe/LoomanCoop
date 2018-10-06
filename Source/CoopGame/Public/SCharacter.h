@@ -52,9 +52,6 @@ protected:
 	UPROPERTY(Replicated)
 	ASWeapon* CurrentWeapon;
 
-	void StartFire();
-	void StopFire();
-
 	UPROPERTY(EditDefaultsOnly, Category = "Player")
 	TSubclassOf<ASWeapon> StarterWeaponClass;
 
@@ -76,4 +73,10 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	UFUNCTION(BlueprintCallable, Category = "Player")
+	void StartFire();
+
+	UFUNCTION(BlueprintCallable, Category = "Player")
+	void StopFire();
 };
